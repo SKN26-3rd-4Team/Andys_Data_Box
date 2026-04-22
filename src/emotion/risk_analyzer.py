@@ -54,6 +54,95 @@ RISK_RECOMMENDATIONS = {
     "critical": "전문 상담 권유 + 안전 대응",
 }
 
+COMBINED_ANALYSIS_PROMPT = """당신은 **연인 갈등 상황** 전문 감정/위험도 통합 분석가입니다.
+
+## 과업
+아래 대화를 한 번에 분석하여 **감정 분석(emotion)** 과 **갈등 위험도(risk)** 를 하나의 JSON으로 반환하세요.
+
+## 감정 라벨
+- 중립(neutral), 놀람(surprise), 분노(anger), 슬픔(sadness), 행복(happiness), 혐오(disgust), 공포(fear)
+- group은 negative, neutral, positive 중 하나입니다.
+- negative: 분노, 슬픔, 혐오, 공포
+- neutral: 중립
+- positive: 행복, 놀람
+
+## 위험도 5단계
+| 등급 | 라벨 | 점수 범위 | 설명 |
+|---|---|---|---|
+| 1 | 안전(safe) | 0.0~0.2 | 갈등 징후 없음. 일상 대화 |
+| 2 | 주의(caution) | 0.2~0.4 | 경미한 불만/서운함 |
+| 3 | 경고(warning) | 0.4~0.6 | 명확한 갈등 신호. 분노/혐오 반복 |
+| 4 | 위험(danger) | 0.6~0.8 | 강한 갈등. 공격적 표현, 감정 폭발 |
+| 5 | 심각(critical) | 0.8~1.0 | 극단적 갈등. 관계 단절 위험 |
+
+## 대화 내용
+{dialogue}
+
+## 보조 출력
+- summary: 현재 갈등/대화 상황 요약 1~2문장
+- reply_candidates: 사용자가 바로 참고할 수 있는 추천 답변 3개
+- avoid: 피해야 할 표현 목록
+- alternative: 대체 표현 목록
+
+## 출력 규칙
+- 반드시 JSON만 출력하세요.
+- 코드블록, 설명 문장, 주석을 출력하지 마세요.
+- emotion은 기존 대화 감정 분석 JSON 구조를 따르세요.
+- risk는 기존 위험도 분석 JSON 구조를 따르세요.
+
+## 출력 형식
+{{
+  "emotion": {{
+    "utterances": [
+      {{
+        "index": 0,
+        "text": "발화 텍스트",
+        "primary": "감정라벨(한글)",
+        "primary_en": "감정라벨(영문)",
+        "group": "negative|neutral|positive",
+        "confidence": 0.0,
+        "reasoning": "추론 근거 (1문장)"
+      }}
+    ],
+    "dialogue_summary": {{
+      "dominant_emotion": "가장 지배적인 감정(한글)",
+      "dominant_group": "negative|neutral|positive",
+      "emotion_flow": "감정 흐름 설명 (1~2문장)",
+      "conflict_level": "low|medium|high"
+    }}
+  }},
+  "risk": {{
+    "risk_score": 0.0,
+    "risk_level": "safe|caution|warning|danger|critical",
+    "risk_label": "한글 라벨",
+    "risk_grade": 1,
+    "analysis": {{
+      "emotion_intensity": "감정 강도 분석 (1문장)",
+      "expression_level": "표현 수위 분석 (1문장)",
+      "conflict_structure": "갈등 구조 분석 (1문장)",
+      "relationship_threat": "관계 위협 수준 (1문장)",
+      "emotion_trend": "감정 흐름 분석 (1문장)",
+      "ending_direction": "종료 방향 분석 (1문장)"
+    }},
+    "recommendation": "대응 전략 (1~2문장)",
+    "reasoning": "종합 판단 근거 (2~3문장)"
+  }},
+  "summary": "상황 요약",
+  "reply_candidates": [
+    "추천 답변 1",
+    "추천 답변 2",
+    "추천 답변 3"
+  ],
+  "avoid": [
+    "피해야 할 표현 1",
+    "피해야 할 표현 2"
+  ],
+  "alternative": [
+    "대체 표현 1",
+    "대체 표현 2"
+  ]
+}}"""
+
 # ──────────────────────────────────────────────
 # 2. 결과 데이터 클래스
 # ──────────────────────────────────────────────
@@ -327,6 +416,94 @@ def analyze_risk(
     return analyzer.analyze(utterances, llm_caller, emotion_result, dialogue_id)
 
 
+def _clean_aux_text(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _clean_aux_list(value: object) -> list[str]:
+    if isinstance(value, str):
+        cleaned = value.strip()
+        return [cleaned] if cleaned else []
+    if not isinstance(value, list):
+        return []
+
+    results: list[str] = []
+    for item in value:
+        cleaned = _clean_aux_text(item)
+        if cleaned and cleaned not in results:
+            results.append(cleaned)
+    return results
+
+
+def _fallback_full_analysis(
+    utterances: list[str],
+    dialogue_id: str | None,
+    error: Exception,
+) -> dict:
+    joined_dialogue = " ".join(str(utterance).strip() for utterance in utterances)
+    summary = (
+        "Gemini 분석을 완료하지 못해 기본 기준으로 임시 분석했습니다. "
+        "대화 내용을 바탕으로 차분한 확인과 공감 중심의 응답을 권장합니다."
+    )
+    if joined_dialogue:
+        summary = f"{summary} 입력 요약: {joined_dialogue[:120]}"
+
+    emotion_result = DialogueEmotionResult(
+        dialogue_id=dialogue_id,
+        utterance_results=[],
+        emotion_sequence=[],
+        dominant_emotion="중립",
+        dominant_group="neutral",
+        negative_ratio=0.0,
+        emotion_volatility=0.0,
+        method="fallback",
+    )
+    risk_result = RiskResult(
+        dialogue_id=dialogue_id,
+        risk_score=0.2,
+        risk_level="caution",
+        risk_label="주의",
+        risk_grade=2,
+        emotion_sequence=[],
+        recommendation="상대의 감정을 단정하지 말고, 현재 느낀 점을 차분히 확인하세요.",
+        method="fallback",
+        reasoning=f"Gemini 분석 실패로 기본 주의 등급을 적용했습니다. 원인: {type(error).__name__}",
+    )
+    gemini_auxiliary = {
+        "summary": summary,
+        "reply_candidates": [
+            "지금 바로 단정하기보다, 내가 느낀 점을 차분히 말해볼게.",
+            "서로 오해가 생긴 부분이 있는지 먼저 확인해보자.",
+            "비난하려는 건 아니고, 이 상황에서 내가 불안했던 점을 이야기하고 싶어.",
+        ],
+        "avoid": [
+            "왜 항상 그래?",
+            "네가 문제야.",
+            "됐고, 그냥 내 말 들어.",
+        ],
+        "alternative": [
+            "나는 이 상황에서 조금 불안했어.",
+            "무슨 일이 있었는지 차분히 듣고 싶어.",
+            "서로 감정이 커지기 전에 잠깐 정리해보자.",
+        ],
+        "fallback": True,
+        "error_type": type(error).__name__,
+    }
+
+    return {
+        "dialogue_id": dialogue_id,
+        "emotion": emotion_result.to_dict(),
+        "risk": risk_result.to_dict(),
+        "summary": gemini_auxiliary["summary"],
+        "reply_candidates": gemini_auxiliary["reply_candidates"],
+        "avoid": gemini_auxiliary["avoid"],
+        "alternative": gemini_auxiliary["alternative"],
+        "gemini_auxiliary": gemini_auxiliary,
+    }
+
+
 # ──────────────────────────────────────────────
 # 5. 통합 파이프라인: 감정 + 위험도
 # ──────────────────────────────────────────────
@@ -356,23 +533,55 @@ def full_analysis(
     if llm_caller is None:
         raise ValueError("llm_caller 함수를 제공해야 합니다.")
 
-    from .emotion_analyzer import analyze_dialogue_emotion
-
-    # 1단계: 감정 분석
-    emotion_result = analyze_dialogue_emotion(
-        utterances, dialogue_id, llm_caller=llm_caller
+    dialogue_text = "\n".join(
+        f"[발화 {index}] {utterance}"
+        for index, utterance in enumerate(utterances)
     )
+    prompt = COMBINED_ANALYSIS_PROMPT.format(dialogue=dialogue_text)
+    try:
+        response = llm_caller(prompt)
+        parsed = RiskAnalyzer._extract_json(response)
 
-    # 2단계: 위험도 분석
-    risk_result = analyze_risk(
-        utterances, dialogue_id, emotion_result,
-        llm_caller=llm_caller
-    )
+        if "emotion" not in parsed or "risk" not in parsed:
+            raise ValueError("통합 LLM 응답에는 emotion과 risk 키가 필요합니다.")
+
+        emotion_payload = parsed.get("emotion")
+        risk_payload = parsed.get("risk")
+        if not isinstance(emotion_payload, dict) or not isinstance(risk_payload, dict):
+            raise ValueError("통합 LLM 응답에는 emotion과 risk 객체가 필요합니다.")
+
+        emotion_classifier = EmotionClassifier()
+        emotion_result = emotion_classifier.parse_dialogue_response(
+            utterances,
+            json.dumps(emotion_payload, ensure_ascii=False),
+            dialogue_id,
+        )
+
+        risk_analyzer = RiskAnalyzer()
+        risk_result = risk_analyzer.parse_response(
+            json.dumps(risk_payload, ensure_ascii=False),
+            dialogue_id=dialogue_id or emotion_result.dialogue_id,
+            emotion_sequence=emotion_result.emotion_sequence,
+        )
+        gemini_auxiliary = {
+            "summary": _clean_aux_text(parsed.get("summary")),
+            "reply_candidates": _clean_aux_list(parsed.get("reply_candidates")),
+            "avoid": _clean_aux_list(parsed.get("avoid")),
+            "alternative": _clean_aux_list(parsed.get("alternative")),
+            "fallback": False,
+        }
+    except Exception as exc:
+        return _fallback_full_analysis(utterances, dialogue_id, exc)
 
     return {
         "dialogue_id": dialogue_id,
         "emotion": emotion_result.to_dict(),
         "risk": risk_result.to_dict(),
+        "summary": gemini_auxiliary["summary"],
+        "reply_candidates": gemini_auxiliary["reply_candidates"],
+        "avoid": gemini_auxiliary["avoid"],
+        "alternative": gemini_auxiliary["alternative"],
+        "gemini_auxiliary": gemini_auxiliary,
     }
 
 
