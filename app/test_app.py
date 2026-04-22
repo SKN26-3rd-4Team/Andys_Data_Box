@@ -71,6 +71,7 @@ def apply_custom_css():
 
         .bubble-left {
             border: 1px solid #DEE2E6;
+            color: #000000;
         }
 
         .bubble-right {
