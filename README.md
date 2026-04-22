@@ -7,7 +7,8 @@
 ---
 
 ## 📌 목차
-
+how to run 
+url 넣기
 1. [Team](#-team)
 2. [프로젝트 개요](#프로젝트-개요)
 3. [시스템 아키텍처](#시스템-아키텍처)
@@ -31,7 +32,7 @@
         <tr>
           <td align="center" height="120">
             <img src=app/figures/렉스.jpg
-                 width="70" height="95"
+                 width="80" height="105"
                  style="object-fit:contain;">
           </td>
         </tr>
@@ -50,7 +51,7 @@
         <tr>
           <td align="center" height="120">
             <img src="app/figures/우디.jpg"
-                 width="70" height="95"
+                 width="80" height="105"
                  style="object-fit:contain;">
           </td>
         </tr>
@@ -69,7 +70,7 @@
         <tr>
           <td align="center" height="120">
             <img src="app/figures/미스터샤크.jpg"
-                 width="70" height="95"
+                 width="80" height="105"
                  style="object-fit:contain;">
           </td>
         </tr>
@@ -88,7 +89,7 @@
         <tr>
           <td align="center" height="120">
             <img src="app/figures/저그 황제.jpg"
-                 width="70" height="95"
+                 width="80" height="105"
                  style="object-fit:contain;">
           </td>
         </tr>
@@ -104,12 +105,12 @@
 </table>
 
 
-| 이름 | 역할 |
-|------|------|
-| 김용욱 | RAG 파이프라인 구축 |
-| 박소윤 | 기획 총괄 / UI 설계 / 프로젝트 관리 |
-| 윤찬호 | 데이터 전처리 및 Retrieval 평가 |
-| 전승권 | 환경설정 / API / 앱 구조 |
+| 이름 | 역할                                                     |
+|------|--------------------------------------------------------|
+| 김용욱 | Vector DB 구축 / 프롬프트 설계 / RAG 파이프라인 구성 / 답변 추천 구조 기본 구성 |
+| 박소윤 | 서비스 기획·로직 설계 / Streamlit 대시보드 구현 / 데이터 시각화 / 일정·마일스톤 관리 |
+| 윤찬호 | 데이터전처리 / RAG 검색 구조 비교 / Retrieval 성능 평가 / 답변 추천 흐름 개선  |
+| 전승권 | 환경설정 / API / 앱 구조                                      |
 
 ---
 
@@ -153,10 +154,8 @@
 
 ## 6. 테스트 및 평가
 
-- BM25 / Dense / RRF 비교
 - 감정 유사도 평가
 - 검색 정확도 분석
-- RAG vs Baseline 비교
 
 ---
 
@@ -207,15 +206,15 @@ project/
         <tr>
             <td rowspan="4" style="text-align: center; font-weight: bold; border: 1px solid #ddd;">김용욱</td>
             <td style="text-align: center; border: 1px solid #ddd;">박소윤</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">프로젝트 내에서 주도적으로 회의를 이끌어나가면서 모두가 좋은 의견을 내어 최고의 방안을 선택해 나갈 수 있게 진행 간 좋은 리더십을 보여주셨으며 리드미 작성 및 스트림릿 초기 구성안에 대해 좋은 의견을 내주셔서 팀원들이 좀 더 빠른 진행을 할 수 있게 큰 도움을 주셨습니다.</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">윤찬호</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">데이터 전처리와 주로 쓰일 후보문들과 대화 구조 정리를 담당해주셨으며, 프로젝트 진행 간 전처리 과정을 완료한 후 RAG 파이프라인을 보다 세분화되게 구성해주며 기존의 파이프라인과 병합하여 좀 더 세분화 된 구조를 보여주셨습니다. 또한 팀원분 중 막히는 부분이 있을 때 쉽게 설명해주며 보다 빠른 이해를 도와주셨습니다</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">전승권</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">프로젝트 간 감정 / 위험도 분석을 맡아주셨으며 분석 간 제일 중요했던 감정선의 기준과 관계 위험도의 기준을 잘 정해주셔서 결과값을 내는 데 있어서 프로젝트 간 추구하던 바를 순조롭게 나타낼 수 있게 큰 도움을 주셨으며 개발 간 팀원들한테 생긴 오류를 주도적으로 찾아보고 해결해주면서 진행 간 오류 해결로 지체되는 시간을 단축시켜주셨습니다.</td>
         </tr>
 <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom: 30px;">
     <thead>
@@ -228,15 +227,15 @@ project/
         <tr>
             <td rowspan="4" style="text-align: center; font-weight: bold; border: 1px solid #ddd;">박소윤</td>
             <td style="text-align: center; border: 1px solid #ddd;">김용욱</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">RAG 파이프라인 구축과 Vector DB 구성, 프롬프트 설계를 맡아 검색과 답변 생성이 원활하게 이루어질 수 있도록 구현해주었습니다. 프로젝트 핵심 기능 개발과 전체 서비스 흐름 정리에 기여해주었습니다.</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">윤찬호</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">데이터 전처리와 RAG 검색 구조 비교, Retrieval 성능 평가를 맡아 성실하게 수행해주었습니다. 답변 추천 흐름도 함께 개선하며 서비스 완성도 향상에 기여해주었습니다.</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">전승권</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">환경설정과 API 연동, 앱 구조 정리를 맡아 프로젝트가 원활하게 동작할 수 있도록 기여해주었습니다. 개발 환경을 정리하고 기능 연동 과정에서도 적극적으로 참여해 팀 작업에 도움이 되었습니다.</td>
         </tr>
 <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom: 30px;">
     <thead>
@@ -249,15 +248,15 @@ project/
         <tr>
             <td rowspan="4" style="text-align: center; font-weight: bold; border: 1px solid #ddd;">윤찬호</td>
             <td style="text-align: center; border: 1px solid #ddd;">김용욱</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;"> Vector DB 구축과 프롬프트 설계를 진행해 주시고, RAG 문서 검색 파이프라인 구성에도 기여해 주셔서 프로젝트 완성도 향상에 큰 도움이 되었습니다.</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">박소윤</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">프로젝트 주제 선정과 역할 분배 같은 의견 조율 과정에서 먼저 나서 주셔서, 팀이 방향을 빠르게 정하고 원활하게 출발할 수 있었습니다.</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">전승권</td>
-            <td style="border: 1px solid #ddd; padding: 10px;"></td>
+            <td style="border: 1px solid #ddd; padding: 10px;">갈등 상황에서 감정과 위험도를 분석하는 역할을 맡아, 프로젝트의 핵심 차별점을 잘 살려주셨습니다.</td>
         </tr>
 <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom: 30px;">
     <thead>
