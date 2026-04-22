@@ -350,6 +350,9 @@ def init_session_state():
     if "input_mode" not in st.session_state:
         st.session_state.input_mode = "텍스트 입력"
 
+    if "last_prompt" not in st.session_state:
+        st.session_state.last_prompt = ""
+
 
 def main():
     apply_custom_css()
@@ -401,6 +404,9 @@ def main():
 
         if st.session_state.input_mode == "텍스트 입력":
             if prompt := st.chat_input("메시지를 입력하세요..."):
+                if prompt == st.session_state.last_prompt:
+                    st.stop()
+                st.session_state.last_prompt = prompt
                 st.session_state.error_message = ""
                 st.session_state.messages.append({"role": "user", "content": prompt})
 

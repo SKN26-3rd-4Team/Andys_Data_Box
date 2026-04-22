@@ -124,6 +124,20 @@ def normalize_recommended_replies(value: object) -> list[dict]:
     return normalized
 
 
+def normalize_text_list(value: object) -> list[str]:
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        return []
+
+    normalized = []
+    for item in value:
+        text = clean_text(item)
+        if text and text not in normalized:
+            normalized.append(text)
+    return normalized[:3]
+
+
 def build_text_analysis_payload(
     *,
     user_input: str,
@@ -132,6 +146,9 @@ def build_text_analysis_payload(
 ) -> dict:
     emotion_result = emotion_risk_result.get("emotion", {})
     risk_result = emotion_risk_result.get("risk", {})
+    gemini_auxiliary = emotion_risk_result.get("gemini_auxiliary", {})
+    if not isinstance(gemini_auxiliary, dict):
+        gemini_auxiliary = {}
 
     normalized_emotion = normalize_emotion(emotion_result)
     normalized_risk = normalize_risk(risk_result)
@@ -147,9 +164,18 @@ def build_text_analysis_payload(
             f"[{reply['label']}] {reply['text']}"
             for reply in recommended_replies
         ]
+    gemini_reply_candidates = normalize_text_list(
+        gemini_auxiliary.get("reply_candidates")
+        or emotion_risk_result.get("reply_candidates")
+    )
+    if not reply_candidates and gemini_reply_candidates:
+        reply_candidates = gemini_reply_candidates
 
     summary_text = parse_section(result_text, "상황 요약") or clean_text(
-        rag_result.get("situation_summary"), user_input
+        rag_result.get("situation_summary"), ""
+    ) or clean_text(
+        gemini_auxiliary.get("summary") or emotion_risk_result.get("summary"),
+        user_input,
     )
     emotion_text = parse_section(result_text, "감정") or clean_text(
         rag_result.get("main_emotion"), ""
@@ -162,6 +188,17 @@ def build_text_analysis_payload(
 
     avoid_text = parse_section(result_text, "피해야 할 표현")
     alternative_text = parse_section(result_text, "대체 표현")
+    avoid_phrases = parse_list_block(avoid_text, allow_questions=False)
+    alternative_phrases = parse_list_block(alternative_text, allow_questions=False)
+    if not avoid_phrases:
+        avoid_phrases = normalize_text_list(
+            gemini_auxiliary.get("avoid") or emotion_risk_result.get("avoid")
+        )
+    if not alternative_phrases:
+        alternative_phrases = normalize_text_list(
+            gemini_auxiliary.get("alternative")
+            or emotion_risk_result.get("alternative")
+        )
     retrieved_cases = format_retrieved_cases(rag_result.get("retrieved_docs", []))
     assistant_message = reply_candidates[0] if reply_candidates else result_text
 
@@ -175,9 +212,10 @@ def build_text_analysis_payload(
         "risk_text": risk_text,
         "reply_candidates": reply_candidates,
         "recommended_replies": recommended_replies,
-        "avoid_phrases": parse_list_block(avoid_text, allow_questions=False),
-        "alternative_phrases": parse_list_block(alternative_text, allow_questions=False),
+        "avoid_phrases": avoid_phrases,
+        "alternative_phrases": alternative_phrases,
         "retrieved_cases": retrieved_cases,
+        "gemini_auxiliary": gemini_auxiliary,
         "rag_raw": rag_result,
         "emotion_risk_raw": emotion_risk_result,
     }
