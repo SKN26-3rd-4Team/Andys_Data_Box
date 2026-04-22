@@ -4,6 +4,9 @@
 # - example vector DB 기반 응답 예시 검색 추가
 # - LLM으로 추천 답변 생성
 # - 상황 요약 / 감정 / 위험도 / 추천 답변 / 피해야 할 표현 출력 강화
+# - 연애/관계 갈등 전용 입력 분류 게이트 추가
+# - 질문 정규화(normalize) 추가
+# - 검색 결과 연인 관계 필터링 추가
 # ============================================================
 
 from pathlib import Path
@@ -51,6 +54,49 @@ def clean_text(value) -> str:
     return str(value).strip()
 
 
+def classify_relationship_query(question: str) -> str:
+    q = clean_text(question)
+
+    lover_keywords = [
+        "남자친구", "여자친구", "남친", "여친",
+        "썸", "연락", "읽씹", "답장",
+        "헤어지", "이별", "싸움", "서운",
+        "잠수", "화해", "커플", "애인"
+    ]
+
+    if any(k in q for k in lover_keywords):
+        return "relationship"
+
+    general_keywords = ["정치", "대통령", "경제", "주식", "회사", "취업"]
+
+    if any(k in q for k in general_keywords):
+        return "general"
+
+    return "unknown"
+
+
+def normalize_relationship_query(question: str) -> str:
+    q = clean_text(question)
+
+    mapping = {
+        "헤어지자": "연인 이별 통보 갈등 대화",
+        "읽씹": "연인 연락 무시 답장 없음 서운함",
+        "연락 안": "연인 연락 문제 서운함 갈등",
+        "답장 안": "연인 답장 없음 연락 갈등",
+        "무시": "연인 무시당함 서운함 갈등",
+        "싸움": "연인 말다툼 감정 충돌",
+        "잠수": "연인 연락 두절 회피 갈등",
+        "잠수탐": "연인 연락 두절 회피 갈등",
+        "정떨어": "연인 실망 관계 악화 감정 거리감",
+    }
+
+    for key, val in mapping.items():
+        if key in q:
+            return val
+
+    return q
+
+
 def infer_emotion_from_question(question: str) -> str:
     q = clean_text(question)
 
@@ -69,7 +115,7 @@ def extract_keywords_from_question(question: str) -> list[str]:
     candidates = [
         "서운", "속상", "무시", "안 들어", "대충", "화", "상처",
         "답답", "공감", "진지", "읽씹", "답장", "회피", "장난", "집중",
-        "연락", "말다툼", "반복", "지쳐"
+        "연락", "말다툼", "반복", "지쳐", "헤어지자", "잠수", "정떨어짐"
     ]
     return [kw for kw in candidates if kw in question]
 
@@ -228,6 +274,25 @@ def reciprocal_rank_fusion(result_lists: list[list[dict]], k: int = 60, top_n: i
     return [item_lookup[dialogue_id] for dialogue_id in ranked_ids]
 
 
+def filter_relationship_documents(results: list[dict], k: int) -> list[dict]:
+    filtered = []
+
+    for doc in results:
+        text = " ".join([
+            clean_text(doc.get("relation", "")),
+            clean_text(doc.get("situation", "")),
+            clean_text(doc.get("page_content", "")),
+        ])
+
+        if any(x in text for x in ["연인", "남자친구", "여자친구", "커플"]):
+            filtered.append(doc)
+
+    if not filtered:
+        return results[:k]
+
+    return filtered[:k]
+
+
 def retrieve_documents(
     question: str,
     rag_df: pd.DataFrame | None,
@@ -236,20 +301,27 @@ def retrieve_documents(
     method: str = "rrf",
     k: int = 3
 ) -> list[dict]:
+    search_k = max(k * 2, 6)
+
     if method == "dense":
-        return dense_search(question, vector_db=vector_db, k=k)
+        results = dense_search(question, vector_db=vector_db, k=search_k)
+        return filter_relationship_documents(results, k)
 
     if method == "bm25":
         if rag_df is None or bm25 is None:
             raise ValueError("bm25 검색은 로컬 CSV 데이터와 BM25 인덱스가 필요합니다.")
-        return bm25_search(question, rag_df=rag_df, bm25=bm25, k=k)
+        results = bm25_search(question, rag_df=rag_df, bm25=bm25, k=search_k)
+        return filter_relationship_documents(results, k)
 
     if method == "rrf":
         if rag_df is None or bm25 is None:
-            return dense_search(question, vector_db=vector_db, k=k)
-        bm25_results = bm25_search(question, rag_df=rag_df, bm25=bm25, k=k)
-        dense_results = dense_search(question, vector_db=vector_db, k=k)
-        return reciprocal_rank_fusion([bm25_results, dense_results], top_n=k)
+            results = dense_search(question, vector_db=vector_db, k=search_k)
+            return filter_relationship_documents(results, k)
+
+        bm25_results = bm25_search(question, rag_df=rag_df, bm25=bm25, k=search_k)
+        dense_results = dense_search(question, vector_db=vector_db, k=search_k)
+        fused_results = reciprocal_rank_fusion([bm25_results, dense_results], top_n=search_k)
+        return filter_relationship_documents(fused_results, k)
 
     raise ValueError("method는 'dense', 'bm25', 'rrf' 중 하나여야 합니다.")
 
@@ -444,17 +516,14 @@ def build_response_example_candidates(
     if response_df is None:
         response_df = pd.DataFrame()
 
-    # 1차: 현재 검색된 문서와 직접 연결된 응답 예시
     if response_df.empty:
         candidate_df = pd.DataFrame()
     else:
         candidate_df = filter_response_examples_by_dialogue_ids(response_df, dialogue_ids)
 
-    # 2차: example vector DB에서 유사 응답 예시 검색
     vector_candidates = example_dense_search(question, example_vector_db, k=5)
     vector_candidate_df = pd.DataFrame(vector_candidates)
 
-    # 두 후보 합치기
     if not vector_candidate_df.empty:
         if candidate_df.empty:
             candidate_df = vector_candidate_df.copy()
@@ -482,7 +551,6 @@ def build_response_example_candidates(
             dedup_cols = ["dialogue_id", "listener_response"]
             candidate_df = candidate_df.drop_duplicates(subset=dedup_cols)
 
-    # 그래도 비면 전체 fallback
     if candidate_df.empty and not response_df.empty:
         candidate_df = response_df.copy()
 
@@ -645,6 +713,9 @@ def format_docs(docs: list[dict]) -> str:
 PROMPT = PromptTemplate.from_template(
     """
 너는 연인 갈등 상황에서 더 나은 답변을 추천하는 도우미다.
+반드시 연인/커플/남녀 관계 갈등 상황으로만 해석할 것.
+미용실, 정치, 사회 일반 의미로 해석하지 말 것.
+검색 결과가 없거나 관련성이 낮으면 검색 문서를 무시하고 사용자 입력만 기준으로 답변할 것.
 
 사용자가 연인과의 갈등 상황을 설명하면,
 현재 상황 요약, 감정, 위험도, 추천 답변, 피해야 할 표현과 대체 표현을
@@ -720,12 +791,14 @@ def generate_recommended_reply(
     k: int = 3,
     use_local_csv: bool = False,
 ) -> dict:
+    query_type = classify_relationship_query(question)
+
     openai_api_key = load_api_key()
     rag_df = None
     response_df = None
     bm25 = None
 
-    if use_local_csv or method == "bm25":
+    if use_local_csv or method in ("bm25", "rrf"):
         rag_df, response_df = load_dataframes()
         bm25 = build_bm25(rag_df)
 
@@ -733,19 +806,28 @@ def generate_recommended_reply(
     example_vector_db = load_example_vector_db(openai_api_key)
     chat_model = load_llm(openai_api_key)
 
-    retrieved_docs = retrieve_documents(
-        question=question,
-        rag_df=rag_df,
-        bm25=bm25,
-        vector_db=vector_db,
-        method=method,
-        k=k,
-    )
+    search_query = normalize_relationship_query(question)
+
+    if query_type == "relationship":
+        retrieved_docs = retrieve_documents(
+            question=search_query,
+            rag_df=rag_df,
+            bm25=bm25,
+            vector_db=vector_db,
+            method=method,
+            k=k,
+        )
+    else:
+        retrieved_docs = []
 
     situation_summary = summarize_current_situation(question, retrieved_docs)
     main_emotion = get_main_emotion(question, retrieved_docs)
     risk_level = get_main_risk_level(retrieved_docs)
-    context = format_docs(retrieved_docs)
+
+    if retrieved_docs:
+        context = format_docs(retrieved_docs)
+    else:
+        context = "관련 연애 갈등 검색 결과 없음. 사용자 입력만 기준으로 답변하라."
 
     recommended_replies = get_labeled_response_examples(
         response_df=response_df,
@@ -754,7 +836,11 @@ def generate_recommended_reply(
         question=question,
         example_vector_db=example_vector_db,
     )
-    response_examples = format_labeled_response_examples(recommended_replies)
+
+    if recommended_replies:
+        response_examples = format_labeled_response_examples(recommended_replies)
+    else:
+        response_examples = "적절한 예시 없음. 사용자 상황에 맞게 새로 생성할 것."
 
     final_prompt = PROMPT.format(
         question=question,
@@ -769,6 +855,8 @@ def generate_recommended_reply(
 
     return {
         "question": question,
+        "query_type": query_type,
+        "search_query": search_query,
         "method": method,
         "retrieved_docs": retrieved_docs,
         "situation_summary": situation_summary,
@@ -789,6 +877,12 @@ def main() -> None:
 
     print("\n===== 입력 질문 =====")
     print(output["question"])
+
+    print("\n===== 입력 분류 =====")
+    print(output["query_type"])
+
+    print("\n===== 정규화 검색어 =====")
+    print(output["search_query"])
 
     print("\n===== 검색된 유사 사례 수 =====")
     print(len(output["retrieved_docs"]))
