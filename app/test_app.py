@@ -166,24 +166,6 @@ def apply_custom_css():
             padding-right:50px;
         }
 
-        .copy-button {
-            position:absolute;
-            right:12px;
-            top:50%;
-            transform:translateY(-50%);
-            background:#f1f3f5;
-            border:1px solid #dee2e6;
-            border-radius:6px;
-            padding:4px 8px;
-            font-size:11px;
-            cursor:pointer;
-            color:#495057;
-        }
-
-        .copy-button:hover{
-            background:#e9ecef;
-        }
-
         .active-history {
             background:#EDF2FF;
             border-color:#DBE4FF;
@@ -213,6 +195,12 @@ def apply_custom_css():
             line-height:1.6;
         }
 
+        .restart-wrap {
+            display:flex;
+            justify-content:flex-end;
+            margin-top:18px;
+        }
+
         div[data-testid="stButton"] > button{
             width:100%;
             border-radius:999px;
@@ -228,19 +216,20 @@ def apply_custom_css():
             background:#F8F5FF;
             color:#5F3DC4;
         }
-        </style>
 
-        <script>
-        function copyToClipboard(text) {
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = text.replace(/<br>/g, '\\n');
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempTextArea);
-            alert('답변이 클립보드에 복사되었습니다.');
+        div[data-testid="stButton"][data-testid-key="restart_button"] > button {
+            border:1px solid #C7D2FE;
+            background:#EEF2FF;
+            color:#4338CA;
+            font-weight:800;
         }
-        </script>
+
+        div[data-testid="stButton"][data-testid-key="restart_button"] > button:hover {
+            background:#E0E7FF;
+            border-color:#A5B4FC;
+            color:#3730A3;
+        }
+        </style>
     """, unsafe_allow_html=True)
 
 
@@ -368,6 +357,25 @@ def init_session_state():
         st.session_state.last_prompt = ""
     if "conflict_type" not in st.session_state:
         st.session_state.conflict_type = "연락 문제 > 답장 지연 > 서운함"
+
+
+def reset_consultation():
+    st.session_state.messages = [{
+        "role": "assistant",
+        "avatar": "🎁",
+        "content": "안녕하세요.\nAI 채팅상담입니다.\n\n연인관계 갈등 유형을 먼저 선택한 뒤, 상황을 입력해 주세요."
+    }]
+    st.session_state.latest_result = None
+    st.session_state.history = []
+    st.session_state.error_message = ""
+    st.session_state.last_prompt = ""
+    st.session_state.conflict_type = "연락 문제 > 답장 지연 > 서운함"
+
+    # 선택박스 상태도 함께 초기화
+    if "major_type" in st.session_state:
+        del st.session_state["major_type"]
+    if "middle_type" in st.session_state:
+        del st.session_state["middle_type"]
 
 
 def set_conflict_type(v):
@@ -604,8 +612,6 @@ def main():
                                 <div class="item-content">
                                     <strong>{label}</strong><br>{safe}
                                 </div>
-                                <button class="copy-button"
-                                onclick='copyToClipboard(`{safe}`)'>복사</button>
                             </div>
                         """, unsafe_allow_html=True)
 
@@ -646,6 +652,15 @@ def main():
                     )
             else:
                 render_history_item("👩🏻‍❤️‍🧑🏻", "히스토리 없음", "-", "첫 분석을 시작해보세요.", True)
+
+            # 오른쪽 하단 새 상담 시작 버튼
+            st.markdown('<div class="restart-wrap">', unsafe_allow_html=True)
+            restart_cols = st.columns([3.3, 1.2])
+            with restart_cols[1]:
+                if st.button("🔄 새 상담 시작", key="restart_button"):
+                    reset_consultation()
+                    st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
