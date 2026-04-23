@@ -42,7 +42,7 @@ PROCESSED_DATA_DIR = PROJECT_ROOT / "data" / "processed"
 
 RAG_TEXT_PATH = PROCESSED_DATA_DIR / "rag_documents_with_text.csv"
 RESPONSE_TEXT_PATH = PROCESSED_DATA_DIR / "response_pairs_with_text.csv"
-TARGET_RESPONSE_STYLES = ("공감형", "완화형", "비난 회피형")
+TARGET_RESPONSE_STYLES = ("공감형", "조언형", "갈등 완충형")
 
 
 # ============================================================
@@ -421,7 +421,15 @@ def summarize_current_situation(question: str, retrieved_docs: list[dict]) -> st
 # ============================================================
 # 7. response example 연결
 # ============================================================
-def filter_response_examples_by_dialogue_ids(response_df: pd.DataFrame, dialogue_ids: list[str]) -> pd.DataFrame:
+
+def filter_response_examples_by_dialogue_ids(
+    response_df: pd.DataFrame,
+    dialogue_ids: list[str]
+) -> pd.DataFrame:
+
+    if response_df is None or response_df.empty:
+        return pd.DataFrame()
+
     if "dialogue_id" not in response_df.columns:
         return response_df.copy()
 
@@ -430,7 +438,12 @@ def filter_response_examples_by_dialogue_ids(response_df: pd.DataFrame, dialogue
     ].copy()
 
 
-def score_response_example(row: pd.Series, emotion: str, question_keywords: list[str]) -> int:
+def score_response_example(
+    row: pd.Series,
+    emotion: str,
+    question_keywords: list[str]
+) -> int:
+
     score = 0
 
     relation = clean_text(row.get("relation", ""))
@@ -472,55 +485,88 @@ def score_response_example(row: pd.Series, emotion: str, question_keywords: list
 
 def map_listener_empathy_to_response_styles(listener_empathy: str) -> list[str]:
     empathy_text = clean_text(listener_empathy)
+
     if not empathy_text or empathy_text == "미분류":
         return []
 
-    styles: list[str] = []
-    if any(keyword in empathy_text for keyword in ["위로", "동조"]):
+    styles = []
+
+    # 공감형 (감정 반응 중심)
+    if any(k in empathy_text for k in ["위로", "동조"]):
         styles.append("공감형")
-    if any(keyword in empathy_text for keyword in ["조언", "격려"]):
-        styles.append("완화형")
-    if any(keyword in empathy_text for keyword in ["조언", "격려", "위로", "동조"]):
-        styles.append("비난 회피형")
-    return styles
+
+    # 조언형 (문제 해결/방향 제시)
+    if any(k in empathy_text for k in ["조언", "격려", "방법", "해결", "해보자"]):
+        styles.append("조언형")
+
+    # 갈등 완충형 (감정+조언 혼합)
+    if any(k in empathy_text for k in ["위로", "동조", "조언", "격려"]):
+        styles.append("갈등 완충형")
+
+    return list(set(styles))
 
 
 def score_response_style_match(row: pd.Series, target_style: str) -> int:
+
     listener_empathy = clean_text(row.get("listener_empathy", ""))
     listener_response = clean_text(row.get("listener_response", ""))
     response_example_text = clean_text(row.get("response_example_text", ""))
+
     mapped_styles = map_listener_empathy_to_response_styles(listener_empathy)
 
     score = 0
-    if target_style in mapped_styles:
-        score += 10
 
+    # ✅ 핵심: 해당 스타일이 아니면 강하게 감점
+    if target_style not in mapped_styles:
+        score -= 5
+    else:
+        score += 8
+
+    # =========================
+    # 공감형
+    # =========================
     if target_style == "공감형":
-        if any(keyword in listener_empathy for keyword in ["위로", "동조"]):
-            score += 4
-        if any(keyword in listener_response for keyword in ["서운", "힘들", "속상", "그랬겠다", "이해"]):
-            score += 2
-
-    elif target_style == "완화형":
-        if any(keyword in listener_empathy for keyword in ["조언", "격려"]):
-            score += 4
-        if any(keyword in listener_response for keyword in ["천천히", "차분", "조금", "같이", "해보"]):
-            score += 2
-
-    elif target_style == "비난 회피형":
-        if any(keyword in listener_empathy for keyword in ["조언", "격려", "위로", "동조"]):
+        if any(k in listener_empathy for k in ["위로", "동조"]):
+            score += 5
+        if any(k in listener_response for k in ["속상", "힘들", "서운", "이해"]):
             score += 3
-        soft_text = " ".join([listener_response, response_example_text])
-        if not any(keyword in soft_text for keyword in ["왜", "맨날", "항상", "네가", "니가", "잘못"]):
-            score += 2
+
+    # =========================
+    # 조언형
+    # =========================
+    elif target_style == "조언형":
+        if any(k in listener_empathy for k in ["조언", "격려", "방법", "해결"]):
+            score += 6
+
+        if any(k in listener_response for k in ["해보", "시도", "천천히", "같이", "방법"]):
+            score += 4
+
+    # =========================
+    # 갈등 완충형
+    # =========================
+    elif target_style == "갈등 완충형":
+        if any(k in listener_empathy for k in ["조언", "격려", "위로", "동조"]):
+            score += 4
+
+        soft_text = listener_response + " " + response_example_text
+
+        if not any(k in soft_text for k in ["왜", "맨날", "항상", "네가", "니가"]):
+            score += 4
+
+        # 중립 + 완화 표현이면 추가 점수
+        if any(k in soft_text for k in ["괜찮", "이해", "천천히", "같이"]):
+            score += 3
 
     return score
 
 
 def _response_text_from_row(row: pd.Series) -> str:
+
     listener_response = clean_text(row.get("listener_response", ""))
+
     if listener_response:
         return listener_response
+
     return clean_text(row.get("response_example_text", ""))
 
 
@@ -561,79 +607,65 @@ def build_response_example_candidates(
         axis=1
     )
 
-    return base_df.sort_values("score", ascending=False)
+    return base_df
 
 
 def select_style_labeled_response_examples(
-    candidate_df: pd.DataFrame,
-    target_styles: tuple[str, ...] = TARGET_RESPONSE_STYLES,
-) -> list[dict]:
-    if candidate_df.empty:
+    candidate_df,
+    target_styles=TARGET_RESPONSE_STYLES,
+):
+    if candidate_df is None or candidate_df.empty:
         return []
 
-    selected: list[dict] = []
-    used_keys: set[tuple[str, str]] = set()
+    selected = []
+    used_texts = set()
 
-    for target_style in target_styles:
-        best_row = _select_best_response_row(candidate_df, target_style, used_keys)
-        if best_row is None:
-            continue
+    for style in target_styles:
 
-        text = _response_text_from_row(best_row)
-        used_keys.add((clean_text(best_row.get("dialogue_id", "")), text))
-        selected.append(
-            {
-                "label": target_style,
-                "text": text,
-                "source_listener_empathy": clean_text(best_row.get("listener_empathy", "")),
-                "dialogue_id": clean_text(best_row.get("dialogue_id", "")),
-            }
-        )
+        rows = []
 
-    return selected
-
-
-def _select_best_response_row(
-    candidate_df: pd.DataFrame,
-    target_style: str,
-    used_keys: set[tuple[str, str]],
-) -> pd.Series | None:
-    best_row = None
-    best_score = None
-
-    for allow_reuse in [False, True]:
         for _, row in candidate_df.iterrows():
+
+            mapped = map_listener_empathy_to_response_styles(
+                row.get("listener_empathy", "")
+            )
+
+            # 핵심: 해당 스타일만 후보 인정
+            if style not in mapped:
+                continue
+
             text = _response_text_from_row(row)
             if not text:
                 continue
 
-            candidate_key = (
-                clean_text(row.get("dialogue_id", "")),
-                text,
-            )
-            if not allow_reuse and candidate_key in used_keys:
+            if text in used_texts:
                 continue
 
-            style_score = score_response_style_match(row, target_style)
-            total_score = int(row.get("score", 0)) + style_score
-            if best_score is None or total_score > best_score:
-                best_score = total_score
-                best_row = row
+            score = int(row.get("score", 0)) + score_response_style_match(row, style)
+            rows.append((score, row))
 
-        if best_row is None:
-            continue
-        return best_row
+        rows.sort(key=lambda x: x[0], reverse=True)
 
-    return None
+        if rows:
+            best = rows[0][1]
+            text = _response_text_from_row(최고)
 
+            used_texts.add(text)
+
+            selected.append({
+                "label": style,
+                "text": text,
+                "dialogue_id": clean_text(best.get("dialogue_id", "")),
+            })
+
+    return selected
 
 def format_labeled_response_examples(recommended_replies: list[dict]) -> str:
-    return "\n\n".join(
-        [
-            f"[응답 예시 {index + 1} - {reply['label']}]\n{reply['text']}"
-            for index, reply in enumerate(recommended_replies)
-        ]
-    )
+
+    return "\n\n".join([
+        f"[응답 예시 {i + 1} - {r['label']}]\n{r['text']}"
+        for i, r in enumerate(recommended_replies)
+    ])
 
 
 def get_labeled_response_examples(
@@ -643,6 +675,7 @@ def get_labeled_response_examples(
     question: str,
     example_vector_db: Any,
 ) -> list[dict]:
+
     candidate_df = build_response_example_candidates(
         response_df=response_df,
         retrieved_docs=retrieved_docs,
@@ -650,6 +683,7 @@ def get_labeled_response_examples(
         question=question,
         example_vector_db=example_vector_db,
     )
+
     return select_style_labeled_response_examples(candidate_df)
 
 
@@ -661,6 +695,7 @@ def get_response_examples(
     example_vector_db: Any,
     top_n: int = 3
 ) -> str:
+
     recommended_replies = get_labeled_response_examples(
         response_df=response_df,
         retrieved_docs=retrieved_docs,
@@ -668,6 +703,7 @@ def get_response_examples(
         question=question,
         example_vector_db=example_vector_db,
     )
+
     if recommended_replies:
         return format_labeled_response_examples(recommended_replies[:top_n])
 
@@ -678,18 +714,30 @@ def get_response_examples(
         question=question,
         example_vector_db=example_vector_db,
     )
-    text_col = "response_example_text" if "response_example_text" in candidate_df.columns else "listener_response"
+
+    if candidate_df.empty:
+        return ""
+
+    text_col = (
+        "response_example_text"
+        if "response_example_text" in candidate_df.columns
+        else "listener_response"
+    )
+
     selected = candidate_df.head(top_n)[text_col].astype(str).tolist()
 
-    return "\n\n".join(
-        [f"[응답 예시 {i + 1}]\n{ex}" for i, ex in enumerate(selected)]
-    )
+    return "\n\n".join([
+        f"[응답 예시 {i + 1}]\n{ex}"
+        for i, ex in enumerate(selected)
+    ])
 
 
 def format_docs(docs: list[dict]) -> str:
+
     formatted = []
 
     for i, doc in enumerate(docs, start=1):
+
         block = [
             f"[유사 사례 {i}]",
             f"dialogue_id: {doc.get('dialogue_id', '')}",
@@ -699,39 +747,57 @@ def format_docs(docs: list[dict]) -> str:
             f"위험도: {doc.get('risk_level', '')}",
             f"본문 일부: {doc.get('page_content', '')[:500]}",
         ]
+
         formatted.append("\n".join(block))
 
     return "\n\n".join(formatted)
-
 
 # ============================================================
 # 8. 프롬프트
 # ============================================================
 PROMPT = PromptTemplate.from_template(
-    """
-너는 연인 갈등 상황에서 더 나은 답변을 추천하는 도우미다.
+"""
+너는 연인 갈등 상황에서 사용자가 연인에게 보낼 답장을 추천하는 AI다.
+
 반드시 연인/커플/남녀 관계 갈등 상황으로만 해석할 것.
 미용실, 정치, 사회 일반 의미로 해석하지 말 것.
-검색 결과가 없거나 관련성이 낮으면 검색 문서를 무시하고 사용자 입력만 기준으로 답변할 것.
+검색 결과가 없거나 관련성이 낮으면 검색 문서를 무시하고 사용자 입력만 기준으로 작성할 것.
 
-사용자가 연인과의 갈등 상황을 설명하면,
-현재 상황 요약, 감정, 위험도, 추천 답변, 피해야 할 표현과 대체 표현을
-이해하기 쉽게 정리해야 한다.
+사용자가 연인과의 갈등 상황을 설명하면
+현재 상황 요약, 감정, 위험도,
+그리고 반드시 서로 다른 스타일의 AI 추천 답변 3개를 생성해야 한다.
 
-반드시 아래 조건을 지켜야 한다.
-- 첫 문장에서 사용자의 감정을 분명하게 공감할 것
-- 너무 길지 않게 작성할 것
-- 답변은 2~4문장 정도로 작성할 것
-- 공격적이거나 비난하는 말투는 피할 것
-- 감정은 솔직하지만 부드럽게 전달할 것
-- 실제 채팅에 바로 복붙해서 보낼 수 있는 문장으로 작성할 것
-- 지나치게 상담사처럼 말하지 말 것
-- 사용자의 현재 감정 톤을 반영할 것
-- 유사 사례와 응답 예시는 참고만 하고, 그대로 복사하지 말 것
-- 판단하거나 평가하지 말 것
-- 해결책을 강요하지 말 것
-- 필요하면 마지막에 짧은 질문 1개를 덧붙일 수 있음
+--------------------------------------------------
+[핵심 규칙]
+- 공감형 / 조언형 / 갈등 완충형 3개 답변을 반드시 모두 작성할 것
+- 세 답변은 서로 문장 구조와 표현이 겹치면 안 된다
+- 각 답변은 실제 카톡에 바로 보낼 수 있게 자연스럽게 작성할 것
+- 너무 상담사처럼 말하지 말 것
+- 공격적 / 비난 / 훈계 말투 금지
+- 각 답변은 2~4문장
+- 첫 문장은 사용자의 감정을 이해하는 말로 시작할 것
+- 유사 사례와 응답 예시는 참고만 하고 그대로 복사 금지
 
+--------------------------------------------------
+[스타일 정의]
+
+[공감형]
+- 감정 위로 중심
+- 해결책 제시하지 말 것
+- 서운함, 속상함, 답답함을 이해해주는 말투
+
+[조언형]
+- 문제 해결 중심
+- 어떻게 말하면 좋을지 제안
+- 행동 방법 제시
+- 공감은 짧게 1문장만
+
+[갈등 완충형]
+- 싸움이 커지지 않도록 부드럽게 전달
+- 내 감정 + 상대 배려 동시 포함
+- 대화 이어갈 수 있게 작성
+
+--------------------------------------------------
 사용자 입력:
 {question}
 
@@ -750,7 +816,8 @@ PROMPT = PromptTemplate.from_template(
 참고 응답 예시:
 {response_examples}
 
-아래 형식으로 출력할 것.
+--------------------------------------------------
+반드시 아래 형식 그대로 출력할 것.
 
 [상황 요약]
 ...
@@ -764,10 +831,10 @@ PROMPT = PromptTemplate.from_template(
 [공감형]
 ...
 
-[완화형]
+[조언형]
 ...
 
-[비난 회피형]
+[갈등 완충형]
 ...
 
 [피해야 할 표현]

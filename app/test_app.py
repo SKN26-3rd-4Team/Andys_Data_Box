@@ -583,19 +583,44 @@ def main():
                     unsafe_allow_html=True
                 )
 
+            import re
+
+            def extract_style_reply(text, label):
+                pattern = rf"\[{label}\]\s*(.*?)(?=\n\[|$)"
+                match = re.search(pattern, text, re.S)
+                if match:
+                    return match.group(1).strip()
+                return ""
+
             st.markdown("<strong>💡 AI 추천 답변</strong>", unsafe_allow_html=True)
 
-            if latest and latest.get("reply_candidates"):
-                for i, text in enumerate(latest["reply_candidates"][:3], 1):
-                    safe = clean_display_text(text).replace("\n", "<br>")
-                    st.markdown(f"""
-                        <div class="list-item">
-                            <div class="item-icon">{i}</div>
-                            <div class="item-content">{safe}</div>
-                            <button class="copy-button"
-                            onclick='copyToClipboard(`{safe}`)'>복사</button>
-                        </div>
-                    """, unsafe_allow_html=True)
+            if latest and latest.get("assistant_message"):
+
+                raw = latest["assistant_message"]
+
+                styles = [
+                    ("공감형", "💙"),
+                    ("조언형", "🧭"),
+                    ("갈등 완충형", "🤝"),
+                ]
+
+                for idx, (label, icon) in enumerate(styles, 1):
+                    reply = extract_style_reply(raw, label)
+
+                    if reply:
+                        safe = clean_display_text(reply).replace("\n", "<br>")
+
+                        st.markdown(f"""
+                            <div class="list-item">
+                                <div class="item-icon">{icon}</div>
+                                <div class="item-content">
+                                    <strong>{label}</strong><br>{safe}
+                                </div>
+                                <button class="copy-button"
+                                onclick='copyToClipboard(`{safe}`)'>복사</button>
+                            </div>
+                        """, unsafe_allow_html=True)
+
             else:
                 st.info("분석 후 추천 답변이 표시됩니다.")
 
