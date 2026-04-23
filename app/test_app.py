@@ -640,7 +640,7 @@ def main():
                     render_history_item(
                         "👩🏻‍❤️‍🧑🏻",
                         title,
-                        "방금" if idx == 0 else f"{idx+1}전",
+                        "방금" if idx == 0 else f"{idx+1}분전",
                         preview_text,
                         idx == 0
                     )
