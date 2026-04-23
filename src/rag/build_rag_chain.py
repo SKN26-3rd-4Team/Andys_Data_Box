@@ -149,7 +149,9 @@ def load_dataframes() -> tuple[pd.DataFrame, pd.DataFrame]:
     rag_df = rag_df.reset_index(drop=True)
 
     return rag_df, response_df
-
+    
+def local_dataframes_available() -> bool:
+    return RAG_TEXT_PATH.exists() and RESPONSE_TEXT_PATH.exists()
 
 def build_bm25(rag_df: pd.DataFrame) -> Any:
     try:
@@ -852,7 +854,7 @@ def generate_recommended_reply(
 
     rag_df = response_df = bm25 = None
 
-    if use_local_csv or method in ("bm25", "rrf"):
+    if use_local_csv or method == "bm25" or (method == "rrf" and local_dataframes_available()):
         rag_df, response_df = load_dataframes()
         bm25 = build_bm25(rag_df)
 
