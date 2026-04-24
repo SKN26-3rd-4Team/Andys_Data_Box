@@ -302,27 +302,6 @@ project/
     </tr>
   </thead>
   <tbody>
-    <!-- 박소윤 -->
-    <tr>
-      <td rowspan="3" align="center"><b>박소윤</b></td>
-      <td align="center"><b>김용욱</b></td>
-      <td>RAG 파이프라인 구축과 Vector DB 구성, 프롬프트 설계를 담당하여 검색과 답변 생성의 기반 구조를 구현해주었습니다. 특히 RAG 흐름 설계 과정에서 핵심 기능 개발에 기여해주었습니다.</td>
-    </tr>
-    <tr>
-      <td align="center"><b>윤찬호</b></td>
-      <td>데이터 전처리와 RAG 검색 구조 비교, Retrieval 성능 평가를 담당하여 데이터 품질 확보와 검색 성능 개선에 기여해주었습니다. 전처리 과정 정리와 데이터 구조 이해에 도움이 되었습니다.</td>
-    </tr>
-    <tr>
-      <td align="center"><b>전승권</b></td>
-      <td>환경설정과 API 연동, 앱 구조 정리를 담당하여 프로젝트가 정상적으로 실행될 수 있는 기반을 마련해주었습니다. 개발 환경 구성과 기능 연결 과정에서 안정성 확보에 기여해주었습니다.</td>
-    </tr>
-<table>
-  <thead>
-    <tr>
-      <th width="120">작성자</th>
-      <th width="120">대상자</th>
-      <th>회고 내용</th>
-    </tr>
     <!-- 김용욱 -->
     <tr>
       <td rowspan="3" align="center"><b>김용욱</b></td>
@@ -336,6 +315,27 @@ project/
     <tr>
       <td align="center"><b>전승권</b></td>
       <td>감정 및 위험도 분석 기준을 정리해주었고, 개발 중 발생한 오류를 함께 해결하며 프로젝트 진행 속도를 높이는 데 도움을 주었습니다.</td>
+    </tr>
+<table>
+  <thead>
+    <tr>
+      <th width="120">작성자</th>
+      <th width="120">대상자</th>
+      <th>회고 내용</th>
+    </tr>
+    <!-- 박소윤 -->
+    <tr>
+      <td rowspan="3" align="center"><b>박소윤</b></td>
+      <td align="center"><b>김용욱</b></td>
+      <td>RAG 파이프라인 구축과 Vector DB 구성, 프롬프트 설계를 담당하여 검색과 답변 생성의 기반 구조를 구현해주었습니다. 특히 RAG 흐름 설계 과정에서 핵심 기능 개발에 기여해주었습니다.</td>
+    </tr>
+    <tr>
+      <td align="center"><b>윤찬호</b></td>
+      <td>데이터 전처리와 RAG 검색 구조 비교, Retrieval 성능 평가를 담당하여 데이터 품질 확보와 검색 성능 개선에 기여해주었습니다. 전처리 과정 정리와 데이터 구조 이해에 도움이 되었습니다.</td>
+    </tr>
+    <tr>
+      <td align="center"><b>전승권</b></td>
+      <td>환경설정과 API 연동, 앱 구조 정리를 담당하여 프로젝트가 정상적으로 실행될 수 있는 기반을 마련해주었습니다. 개발 환경 구성과 기능 연결 과정에서 안정성 확보에 기여해주었습니다.</td>
     </tr>
 <table>
   <thead>
