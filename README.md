@@ -7,155 +7,160 @@
 ---
 
 ## 📌 목차
-how to run 
-url 넣기
-1. [Team](#-team)
-2. [프로젝트 개요](#프로젝트-개요)
-3. [시스템 아키텍처](#시스템-아키텍처)
-4. [데이터 전처리 결과](#데이터-전처리-결과)
-5. [RAG 기반 시스템 구현](#rag-기반-시스템-구현)
-6. [테스트 및 평가](#테스트-및-평가)
-7. [Streamlit UI](#streamlit-ui)
-8. [프로젝트 구조](#프로젝트-구조)
-9. [동료 회고](#동료-회고)
+
+0. How to Run
+1. Team
+2. 프로젝트 개요
+3. 시스템 아키텍처
+4. 데이터 전처리
+5. RAG 기반 시스템
+6. 테스트 및 평가
+7. Streamlit UI
+8. 프로젝트 구조
+9. 주요 차별점
+10. 한계 및 개선 방향
+11. 동료 회고
 
 ---
 
-## 1.  Team
+## 0. How to Run
+
+<pre>
+# 1. 환경 설정
+conda env create -f environment.yml
+conda activate <env_name>
+
+# 2. 환경 변수 설정
+cp .env.example .env
+# OPENAI_API_KEY / GEMINI_API_KEY 입력
+
+# 3. 실행
+streamlit run app/streamlit_app.py
+</pre>
+
+🔗 (https://andysdatabox-7tb38xujsfiq3uaiwdr9na.streamlit.app/)
+
+---
+
+## 1. Team
 
 ## 🎁 Andy's Data Box
 
 <table align="center">
   <tr>
-    <td align="center" width="125" valign="top">
-      <table align="center" width="105">
-        <tr>
-          <td align="center" height="120">
-            <img src=app/figures/렉스.jpg
-                 width="80" height="105"
-                 style="object-fit:contain;">
-          </td>
-        </tr>
-        <tr>
-          <td align="center" height="36"><b>김용욱</b></td>
-        </tr>
-        <tr>
-          <td align="center" height="44">
-            <a href="https://github.com/yonguk12077-beep">@yonguk12077-beep</a>
-          </td>
-        </tr>
-      </table>
+    <td align="center" width="125">
+      <img src="app/figures/렉스.jpg" width="80"><br>
+      <b>김용욱</b><br>
+      <a href="https://github.com/yonguk12077-beep">@yonguk12077-beep</a>
     </td>
-    <td align="center" width="125" valign="top">
-      <table align="center" width="105">
-        <tr>
-          <td align="center" height="120">
-            <img src="app/figures/우디.jpg"
-                 width="80" height="105"
-                 style="object-fit:contain;">
-          </td>
-        </tr>
-        <tr>
-          <td align="center" height="36"><b>박소윤</b></td>
-        </tr>
-        <tr>
-          <td align="center" height="44">
-            <a href="https://github.com/parksoyun9084-cloud">@parksoyun9084-cloud</a>
-          </td>
-        </tr>
-      </table>
+    <td align="center" width="125">
+      <img src="app/figures/우디.jpg" width="80"><br>
+      <b>박소윤</b><br>
+      <a href="https://github.com/parksoyun9084-cloud">@parksoyun9084-cloud</a>
     </td>
-    <td align="center" width="125" valign="top">
-      <table align="center" width="105">
-        <tr>
-          <td align="center" height="120">
-            <img src="app/figures/미스터샤크.jpg"
-                 width="80" height="105"
-                 style="object-fit:contain;">
-          </td>
-        </tr>
-        <tr>
-          <td align="center" height="36"><b>윤찬호</b></td>
-        </tr>
-        <tr>
-          <td align="center" height="44">
-            <a href="https://github.com/ch3477-sudo">@ch3477-sudo</a>
-          </td>
-        </tr>
-      </table>
+    <td align="center" width="125">
+      <img src="app/figures/미스터샤크.jpg" width="80"><br>
+      <b>윤찬호</b><br>
+      <a href="https://github.com/ch3477-sudo">@ch3477-sudo</a>
     </td>
-    <td align="center" width="125" valign="top">
-      <table align="center" width="105">
-        <tr>
-          <td align="center" height="120">
-            <img src="app/figures/저그 황제.jpg"
-                 width="80" height="105"
-                 style="object-fit:contain;">
-          </td>
-        </tr>
-        <tr>
-          <td align="center" height="36"><b>전승권</b></td>
-        </tr>
-        <tr>
-          <td align="center" height="44">
-            <a href="https://github.com/eaent">@eaent</a>
-          </td>
-        </tr>
-      </table>
+    <td align="center" width="125">
+      <img src="app/figures/저그 황제.jpg" width="80"><br>
+      <b>전승권</b><br>
+      <a href="https://github.com/eaent">@eaent</a>
+    </td>
+  </tr>
 </table>
 
+## 역할 분담
 
-| 이름 | 역할                                                     |
-|------|--------------------------------------------------------|
+| 이름 | 역할 |
+|------|------|
 | 김용욱 | Vector DB 구축 / 프롬프트 설계 / RAG 파이프라인 구성 / 답변 추천 구조 기본 구성 |
-| 박소윤 | 서비스 기획·로직 설계 / Streamlit 대시보드 구현 / 데이터 시각화 / 일정·마일스톤 관리 |
-| 윤찬호 | 데이터전처리 / RAG 검색 구조 비교 / Retrieval 성능 평가 / 답변 추천 흐름 개선  |
-| 전승권 | 환경설정 / API / 앱 구조                                      |
+| 박소윤 | 서비스 기획·아키텍처 설계 / RAG·감정·위험도 통합 AI 로직 설계 / Streamlit 구현 및 기능 연동 / 데이터 구조 및 문서화 설계 / 일정·마일스톤 관리|
+| 윤찬호 | 데이터 전처리 / RAG 검색 구조 비교 / Retrieval 성능 평가 / 답변 추천 흐름 개선 |
+| 전승권 | 환경설정 / API / 앱 구조 |
+
+---
 
 ---
 
 ## 2. 프로젝트 개요
 
-연인 간 대화에서 발생하는 갈등 상황을 분석하고,  
-감정 및 위험도를 기반으로 적절한 대화 답변을 추천하는 시스템 구축
+연인 간 대화에서 발생하는 갈등 상황을 분석하고  
+감정 및 갈등 위험도를 기반으로 실제 사용할 수 있는 답장 메시지를 추천하는 AI 시스템이다.
 
+### 2-1. 목표
 
+- 감정 기반 상황 이해
+- 갈등 위험도 판단
+- RAG 기반 유사 사례 활용
+- 실사용 가능한 답장 생성
 
 ---
 
 ## 3. 시스템 아키텍처
 
-- 입력: 사용자 대화
-- 감정 분석
-- 위험도 분석
-- RAG 기반 유사 사례 검색
-- 답변 생성
+<pre>
+사용자 입력
+→ Streamlit UI
+→ 감정 분석 (Gemini)
+→ 위험도 분석 (Gemini)
+→ RAG 검색 (BM25 + Dense + RRF)
+→ 답변 생성 (GPT)
+→ 출력 파싱 및 보정
+→ UI 출력
+</pre>
+
+### 3-1. 핵심 특징
+
+- LLM + RAG 혼합 구조
+- 감정 + 위험도 기반 분석
+- 실제 메시지 생성 중심 설계
+- 출력 안정화 (repair prompt)
 
 ---
 
-## 4. 데이터 전처리 결과
+## 4. 데이터 전처리
 
-- 공감형 대화 데이터셋 활용
-- 연인 관계 대화 필터링
-- 발화 단위 구조화
-- CSV / JSON 형태로 변환
-- RAG 학습용 문서 생성
+### 4-1. 사용 데이터
+
+- 공감형 대화 데이터셋
+- 연인 관계 데이터 필터링
+
+### 4-2. 전처리 결과
+
+| 파일 | 역할 |
+|------|------|
+| continuous_dialogue_dialogue.csv | 대화 단위 감정 흐름 |
+| continuous_dialogue_utterance.csv | 발화 단위 감정 |
+| rag_documents.csv | RAG 검색 문서 |
+| response_pairs.csv | 답변 추천 데이터 |
 
 ---
 
-## 5. RAG 기반 시스템 구현
+## 5. RAG 기반 시스템
 
-- Embedding 모델 적용
-- Vector DB 구축 (FAISS / 예정: Pinecone)
-- Retriever 구성
-- Prompt 기반 답변 생성
+### 5-1. 구조
+
+- BM25 (키워드 검색)
+- Dense (임베딩 기반 검색)
+- RRF 결합
+
+### 5-2. 효과
+
+- 환각 감소
+- 실제 사례 기반 답변 생성
+- 상황 적합도 향상
 
 ---
 
 ## 6. 테스트 및 평가
 
-- 감정 유사도 평가
-- 검색 정확도 분석
+- 감정 분석 정상 동작
+- 위험도 분류 단계별 구분 성공
+- 답변 생성 실사용 가능 수준 확보
+
+👉 상세 내용: docs/04_test/
 
 ---
 
@@ -169,30 +174,43 @@ url 넣기
 
 ## 8. 프로젝트 구조
 
-```
+<pre>
 project/
 │
 ├─ data/
-│   ├─ raw/
-│   └─ processed/
-│
 ├─ src/
-│   ├─ data/
 │   ├─ emotion/
 │   ├─ rag/
-│   └─ utils/
+│   └─ app_service.py
 │
 ├─ app/
 │   └─ streamlit_app.py
 │
 ├─ docs/
-│
+├─ tests/
 └─ README.md
-```
+</pre>
 
 ---
 
-## 9. 동료 회고
+## 9. 주요 차별점
+
+- 단순 챗봇이 아닌 답장 생성 시스템
+- 감정 + 위험도 기반 대응 전략
+- RAG 기반 상황 이해
+- 실제 메시지 스타일 출력
+
+---
+
+## 10. 한계 및 개선 방향
+
+- 데이터 다양성 부족
+- 감정 분석 정확도 개선 필요
+- 실시간 대화 기능 확장 가능
+
+---
+
+## 11. 동료 회고
 
 <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom: 30px;">
     <thead>
@@ -227,15 +245,15 @@ project/
         <tr>
             <td rowspan="4" style="text-align: center; font-weight: bold; border: 1px solid #ddd;">박소윤</td>
             <td style="text-align: center; border: 1px solid #ddd;">김용욱</td>
-            <td style="border: 1px solid #ddd; padding: 10px;">RAG 파이프라인 구축과 Vector DB 구성, 프롬프트 설계를 맡아 검색과 답변 생성이 원활하게 이루어질 수 있도록 구현해주었습니다. 프로젝트 핵심 기능 개발과 전체 서비스 흐름 정리에 기여해주었습니다.</td>
+            <td style="border: 1px solid #ddd; padding: 10px;">RAG 파이프라인 구축과 Vector DB 구성, 프롬프트 설계를 담당하여 검색과 답변 생성의 기반 구조를 구현해주었습니다. 특히 RAG 흐름 설계 과정에서 핵심 기능 개발에 기여해주었습니다.</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">윤찬호</td>
-            <td style="border: 1px solid #ddd; padding: 10px;">데이터 전처리와 RAG 검색 구조 비교, Retrieval 성능 평가를 맡아 성실하게 수행해주었습니다. 답변 추천 흐름도 함께 개선하며 서비스 완성도 향상에 기여해주었습니다.</td>
+            <td style="border: 1px solid #ddd; padding: 10px;">데이터 전처리와 RAG 검색 구조 비교, Retrieval 성능 평가를 담당하여 데이터 품질 확보와 검색 성능 개선에 기여해주었습니다. 전처리 과정 정리와 데이터 구조 이해에 도움이 되었습니다.</td>
         </tr>
         <tr>
             <td style="text-align: center; border: 1px solid #ddd;">전승권</td>
-            <td style="border: 1px solid #ddd; padding: 10px;">환경설정과 API 연동, 앱 구조 정리를 맡아 프로젝트가 원활하게 동작할 수 있도록 기여해주었습니다. 개발 환경을 정리하고 기능 연동 과정에서도 적극적으로 참여해 팀 작업에 도움이 되었습니다.</td>
+            <td style="border: 1px solid #ddd; padding: 10px;">환경설정과 API 연동, 앱 구조 정리를 담당하여 프로젝트가 정상적으로 실행될 수 있는 기반을 마련해주었습니다. 개발 환경 구성과 기능 연결 과정에서 안정성 확보에 기여해주었습니다.</td>
         </tr>
 <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom: 30px;">
     <thead>
