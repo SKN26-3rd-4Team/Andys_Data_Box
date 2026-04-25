@@ -768,7 +768,7 @@ def main():
     init_session_state()
 
     st.markdown(
-        '<div class="top-bar"><strong>🎁 연인 갈등 상황 대응 답변 추천 AI</strong><span>👩🏻‍❤️‍🧑🏻</span></div>',
+        '<div class="top-bar"><strong>🎁 감정 기반 연인 갈등 완화 대화 추천 시스템</strong><span>👩🏻‍❤️‍🧑🏻</span></div>',
         unsafe_allow_html=True
     )
 
