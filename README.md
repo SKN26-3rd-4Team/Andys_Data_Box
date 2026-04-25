@@ -362,59 +362,59 @@ project/
   <tbody>
     <!-- 김용욱 -->
     <tr>
-      <td rowspan="3" align="center" style="border:1px solid #d0d7de;"><b>김용욱</b></td>
-      <td align="center" style="border:1px solid #d0d7de;">박소윤</td>
-      <td style="border:1px solid #d0d7de;">프로젝트 내에서 주도적으로 회의를 이끌어나가며 방향을 정리해주었고, README 작성 및 Streamlit 초기 구성안 제안으로 팀 진행에 큰 도움을 주었습니다.</td>
+      <td rowspan="3" align="center" style="border:1px solid #d0d7de; white-space:nowrap;"><b>김용욱</b></td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">박소윤</td>
+      <td style="border:1px solid #d0d7de;">프로젝트 내에서 주도적으로 회의를 이끌며 방향을 정리해주었고, README 작성 및 Streamlit 초기 구성안 제안으로 팀 진행에 큰 도움을 주었습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">윤찬호</td>
-      <td style="border:1px solid #d0d7de;">데이터 전처리와 후보 문장, 대화 구조 정리를 담당해주었고, RAG 파이프라인을 세분화하여 기존 구조와 병합하는 데 기여해주었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">윤찬호</td>
+      <td style="border:1px solid #d0d7de;">데이터 전처리와 후보 문장, 대화 구조 정리를 담당하고 RAG 파이프라인을 세분화하여 기존 구조와 병합하는 데 기여해주었습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">전승권</td>
-      <td style="border:1px solid #d0d7de;">감정 및 위험도 분석 기준을 정리해주었고, 개발 중 발생한 오류를 함께 해결하며 프로젝트 진행 속도를 높이는 데 도움을 주었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">전승권</td>
+      <td style="border:1px solid #d0d7de;">감정 및 위험도 분석 기준을 정리하고, 개발 중 발생한 오류를 함께 해결하며 프로젝트 진행 속도를 높이는 데 도움을 주었습니다.</td>
     </tr>
     <!-- 박소윤 -->
     <tr>
-      <td rowspan="3" align="center" style="border:1px solid #d0d7de;"><b>박소윤</b></td>
-      <td align="center" style="border:1px solid #d0d7de;">김용욱</td>
-      <td style="border:1px solid #d0d7de;">RAG 파이프라인 구축과 Vector DB 구성, 프롬프트 설계를 담당하여 검색과 답변 생성의 기반 구조를 구현해주었습니다. 특히 RAG 흐름 설계 과정에서 핵심 기능 개발에 기여해주었습니다.</td>
+      <td rowspan="3" align="center" style="border:1px solid #d0d7de; white-space:nowrap;"><b>박소윤</b></td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">김용욱</td>
+      <td style="border:1px solid #d0d7de;">RAG 파이프라인 구축과 Vector DB 구성, 프롬프트 설계를 담당하여 검색과 답변 생성의 기반 구조를 구현해주었습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">윤찬호</td>
-      <td style="border:1px solid #d0d7de;">데이터 전처리와 RAG 검색 구조 비교, Retrieval 성능 평가를 담당하여 데이터 품질 확보와 검색 성능 개선에 기여해주었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">윤찬호</td>
+      <td style="border:1px solid #d0d7de;">데이터 전처리와 RAG 검색 구조 비교, Retrieval 성능 평가를 통해 데이터 품질과 검색 성능 개선에 기여해주었습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">전승권</td>
-      <td style="border:1px solid #d0d7de;">환경설정과 API 연동, 앱 구조 정리를 담당하여 프로젝트가 정상적으로 실행될 수 있는 기반을 마련해주었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">전승권</td>
+      <td style="border:1px solid #d0d7de;">환경설정과 API 연동, 앱 구조 정리를 담당하여 프로젝트 실행 기반을 안정적으로 구축해주었습니다.</td>
     </tr>
     <!-- 윤찬호 -->
     <tr>
-      <td rowspan="3" align="center" style="border:1px solid #d0d7de;"><b>윤찬호</b></td>
-      <td align="center" style="border:1px solid #d0d7de;">김용욱</td>
-      <td style="border:1px solid #d0d7de;">Vector DB 구축과 프롬프트 설계를 진행해주시고, RAG 문서 검색 파이프라인 구성에도 기여해주셔서 프로젝트 완성도 향상에 도움이 되었습니다.</td>
+      <td rowspan="3" align="center" style="border:1px solid #d0d7de; white-space:nowrap;"><b>윤찬호</b></td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">김용욱</td>
+      <td style="border:1px solid #d0d7de;">Vector DB 구축과 프롬프트 설계, RAG 문서 검색 파이프라인 구성에 기여하여 프로젝트 완성도를 높였습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">박소윤</td>
-      <td style="border:1px solid #d0d7de;">프로젝트 주제 선정과 역할 분배 과정에서 먼저 나서주셔서 팀이 방향을 빠르게 정하고 원활하게 출발할 수 있었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">박소윤</td>
+      <td style="border:1px solid #d0d7de;">프로젝트 주제 선정과 역할 분배를 주도하여 팀이 빠르게 방향을 잡고 원활하게 진행할 수 있도록 했습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">전승권</td>
-      <td style="border:1px solid #d0d7de;">갈등 상황에서 감정과 위험도를 분석하는 역할을 맡아 프로젝트의 핵심 차별점을 잘 살려주었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">전승권</td>
+      <td style="border:1px solid #d0d7de;">감정 및 위험도 분석을 담당하여 프로젝트의 핵심 차별성을 잘 살려주었습니다.</td>
     </tr>
     <!-- 전승권 -->
     <tr>
-      <td rowspan="3" align="center" style="border:1px solid #d0d7de;"><b>전승권</b></td>
-      <td align="center" style="border:1px solid #d0d7de;">김용욱</td>
-      <td style="border:1px solid #d0d7de;">RAG 파트에서 벡터 DB를 깔끔하게 구축해주었습니다.</td>
+      <td rowspan="3" align="center" style="border:1px solid #d0d7de; white-space:nowrap;"><b>전승권</b></td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">김용욱</td>
+      <td style="border:1px solid #d0d7de;">RAG 파트에서 Vector DB를 안정적으로 구축해주었습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">박소윤</td>
-      <td style="border:1px solid #d0d7de;">프로젝트 전반에서 의견 표현이 명확했고, 역할 분배를 주도하여 팀 진행에 도움이 되었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">박소윤</td>
+      <td style="border:1px solid #d0d7de;">프로젝트 전반에서 명확한 의사 표현과 역할 분배를 통해 팀 진행에 큰 도움을 주었습니다.</td>
     </tr>
     <tr>
-      <td align="center" style="border:1px solid #d0d7de;">윤찬호</td>
-      <td style="border:1px solid #d0d7de;">전처리 데이터셋을 담당하여 자료 준비가 수월해졌고, 프로젝트 수행에 도움이 되었습니다.</td>
+      <td align="center" style="border:1px solid #d0d7de; white-space:nowrap;">윤찬호</td>
+      <td style="border:1px solid #d0d7de;">데이터 전처리를 담당하여 자료 준비와 프로젝트 수행을 원활하게 만들어주었습니다.</td>
     </tr>
 
   </tbody>
