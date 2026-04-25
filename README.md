@@ -310,7 +310,7 @@ streamlit run app/streamlit_app.py
 ```text
 project/
 │
-├─ app/                          # Streamlit UI
+├─ app/                         # Streamlit UI
 │   └─ streamlit_app.py         # 메인 실행 파일 (UI + 사용자 입력 처리)
 │
 ├─ src/                         # 핵심 서비스 로직
