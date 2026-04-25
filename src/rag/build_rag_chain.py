@@ -109,14 +109,49 @@ def split_lines_as_list(text: str) -> list[str]:
     if not text:
         return []
 
-    normalized = clean_text(text).replace("•", "\n• ").replace(" - ", "\n- ")
-    lines = []
-    for line in normalized.split("\n"):
-        cleaned = clean_text(line).lstrip("-").lstrip("•").strip()
-        if cleaned:
-            lines.append(cleaned)
+    normalized = clean_text(text)
 
-    return lines
+    # 따옴표 안 표현 우선 추출
+    quoted = re.findall(r"[\"“”'‘’]([^\"“”'‘’]+)[\"“”'‘’]", normalized)
+
+    if quoted:
+        candidates = quoted
+    else:
+        normalized = normalized.replace("•", "\n")
+        normalized = normalized.replace(" - ", "\n")
+        normalized = normalized.replace("/", "\n")
+        normalized = normalized.replace("／", "\n")
+        normalized = normalized.replace(",", "\n")
+        normalized = normalized.replace("·", "\n")
+        candidates = normalized.split("\n")
+
+    results = []
+
+    invalid_values = {
+        "", ",", ".", "-", "•", "·", ":", ";",
+        "없음", "없습니다", "해당 없음", "없다",
+        "예:", "예시:"
+    }
+
+    for item in candidates:
+        cleaned = clean_text(item)
+        cleaned = re.sub(r"^\s*[-•·\d.)]+\s*", "", cleaned)
+        cleaned = cleaned.strip("\"'“”‘’ ")
+        cleaned = clean_text(cleaned)
+
+        if cleaned in invalid_values:
+            continue
+
+        if all(ch in ",.ㆍ·-•;: " for ch in cleaned):
+            continue
+
+        if len(cleaned.replace(" ", "")) < 2:
+            continue
+
+        if cleaned not in results:
+            results.append(cleaned)
+
+    return results[:3]
 
 
 def is_reply_to_user_instead_of_partner(text: str) -> bool:
@@ -917,12 +952,11 @@ PROMPT = PromptTemplate.from_template(
 
 - 반드시 "나 / 내" 화법 사용
 
-- 절대 금지 표현:
-  ❌ "네가 느끼는"
-  ❌ "네 마음"
-  ❌ "많이 힘들었겠다"
-  ❌ "이해해"
-  ❌ "당연해"
+- 상담형 문체 금지:
+  ❌ 사용자를 위로하는 말투 금지
+  ❌ "너/네" 중심으로 사용자를 분석하거나 위로하는 표현 금지
+  ❌ 상대 감정을 단정하는 표현 금지
+  ❌ AI가 상담하는 듯한 표현 금지
 
 - 상담사 말투 금지
 - 훈계, 비난, 공격 금지
@@ -989,10 +1023,15 @@ PROMPT = PromptTemplate.from_template(
 ...
 
 [피해야 할 표현]
-...
+- 사용자 입력이나 생성 답장에서 실제로 갈등을 키울 수 있는 표현만 작성
+- 한 줄에 하나씩 작성
+- 예시 문구를 그대로 복사하지 말 것
 
 [대체 표현]
-...
+- 피해야 할 표현을 부드럽게 바꾼 표현 작성
+- 한 줄에 하나씩 작성
+- 피해야 할 표현과 순서를 맞출 것
+
 """
 )
 
@@ -1048,26 +1087,9 @@ def repair_llm_output_if_needed(
     raw_text: str,
 ) -> tuple[str, dict[str, str]]:
     sections = parse_llm_sections(raw_text)
-
-    if ensure_style_labels_present(sections):
-        return raw_text, sections
-
-    repair_prompt = REPAIR_PROMPT.format(
-        question=question,
-        situation_summary=situation_summary,
-        main_emotion=main_emotion,
-        risk_level=risk_level,
-        draft=raw_text,
-    )
-
-    repaired = llm.invoke(repair_prompt)
-    repaired_text = clean_text(repaired.content)
-    repaired_sections = parse_llm_sections(repaired_text)
-
-    if ensure_style_labels_present(repaired_sections):
-        return repaired_text, repaired_sections
-
     return raw_text, sections
+
+
 
 
 # ============================================================
