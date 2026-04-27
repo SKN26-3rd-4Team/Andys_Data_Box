@@ -205,39 +205,22 @@ streamlit run app/streamlit_app.py
 
 ```mermaid
 flowchart TD
-    A[사용자 입력]
-    B[Streamlit UI]
+    A[사용자 입력] --> B[Streamlit UI]
 
-    subgraph 분석 영역
-        C1[감정 분석 (Gemini)]
-        C2[위험도 분석 (Gemini)]
-    end
+    B --> C1[감정 분석 Gemini]
+    B --> C2[위험도 분석 Gemini]
 
-    subgraph RAG 검색
-        D1[BM25]
-        D2[Dense Embedding]
-        D3[RRF 결합]
-    end
+    C1 --> D[RAG 검색]
+    C2 --> D
 
-    E[답변 생성 (GPT)]
-    F[출력 파싱 / UI 가공]
-    G[최종 결과 출력]
-
-    A --> B
-    B --> C1
-    B --> C2
-
-    C1 --> D1
-    C1 --> D2
-    C2 --> D1
-    C2 --> D2
-
-    D1 --> D3
+    D --> D1[BM25]
+    D --> D2[Dense Embedding]
+    D1 --> D3[RRF 결합]
     D2 --> D3
 
-    D3 --> E
-    E --> F
-    F --> G
+    D3 --> E[답변 생성 GPT]
+    E --> F[출력 파싱 / UI 가공]
+    F --> G[최종 결과 출력]
 ```
 
 👉 상세 구조: [시스템 아키텍처](docs/02_architecture/system_architecture.md)
